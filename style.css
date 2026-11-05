@@ -1,0 +1,124 @@
+
+/* CSS Variables */
+:root {
+    --primary: #142b60;
+    --accent: #f5a623;
+    --background: #f2f2f2;
+    --text: #222222;
+}
+
+/* Basic Page */
+body {
+    font-family: Arial, sans-serif;
+    background-color: var(--background);
+    color: var(--text);
+    margin: 0;
+}
+
+/* Navigation Bar */
+nav {
+    background-color: var(--primary);
+    padding: 15px;
+    text-align: center;
+    position: fixed;
+    top: 0;
+    width: 100%;
+}
+
+nav a {
+    color: white;
+    text-decoration: none;
+    margin: 15px;
+}
+
+nav a:hover {
+    color: var(--accent);
+}
+
+/* Hero Section */
+header {
+    background: linear-gradient(to right, #142b60, #4169a8);
+    color: white;
+    text-align: center;
+    padding: 80px 20px;
+    margin-top: 45px;
+}
+
+header h2 {
+    color: white;
+}
+
+/* Buttons */
+button, .btn {
+    background-color: var(--accent);
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+/* Sections */
+section {
+    background-color: white;
+    margin: 20px;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px gray;
+}
+
+/* Headings */
+h2 {
+    color: var(--primary);
+}
+
+/* Tables */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 15px;
+}
+
+th {
+    background-color: var(--primary);
+    color: white;
+}
+
+th, td {
+    padding: 12px;
+    border: 1px solid gray;
+    text-align: center;
+}
+
+/* Forms */
+input, select {
+    padding: 10px;
+    margin: 8px;
+    border: 1px solid gray;
+    border-radius: 5px;
+}
+
+/* Booking Summary */
+.summary {
+    background-color: #fff3d6;
+    padding: 15px;
+    border-radius: 10px;
+}
+
+/* Guidelines Cards */
+.card {
+    background-color: #e6edff;
+    padding: 15px;
+    margin: 10px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px gray;
+}
+
+/* Footer */
+footer {
+    background-color: var(--primary);
+    color: white;
+    text-align: center;
+    padding: 20px;
+}
