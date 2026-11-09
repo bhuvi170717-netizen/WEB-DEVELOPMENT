@@ -1,0 +1,104 @@
+
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>IPL Ticket Booking Form</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+    <!-- Navigation -->
+    <nav>
+        <a href="index.html">Home</a>
+        <a href="index.html#matches">Matches</a>
+        <a href="booking.html">Book Ticket</a>
+    </nav>
+
+    <!-- Booking Form -->
+    <section>
+
+        <h2>IPL Ticket Booking Form</h2>
+
+        <form>
+
+            <!-- Name -->
+            <label>Name:</label>
+            <input type="text" name="name"
+                placeholder="Enter your name"
+                minlength="3" maxlength="30"
+                required>
+            <br><br>
+
+            <!-- Email -->
+            <label>Email:</label>
+            <input type="email" name="email"
+                placeholder="Enter your email"
+                required>
+            <br><br>
+
+            <!-- Phone -->
+            <label>Phone Number:</label>
+            <input type="tel" name="phone"
+                placeholder="Enter 10 digit number"
+                pattern="[0-9]{10}"
+                required>
+            <br><br>
+
+            <!-- Match Selection -->
+            <label>Select Match:</label>
+            <select name="match" required>
+                <option value="">Choose Match</option>
+                <option>RCB vs CSK</option>
+                <option>MI vs KKR</option>
+                <option>CSK vs MI</option>
+                <option>RCB vs KKR</option>
+            </select>
+            <br><br>
+
+            <!-- Stand Category -->
+            <label>Stand Category:</label>
+            <select name="stand" required>
+                <option value="">Choose Stand</option>
+                <option>General</option>
+                <option>Premium</option>
+                <option>VIP</option>
+            </select>
+            <br><br>
+
+            <!-- Number of Tickets -->
+            <label>Number of Tickets:</label>
+            <input type="number" name="tickets"
+                min="1" max="10" required>
+            <br><br>
+
+            <!-- Additional Preference -->
+            <label>Booking Preference:</label>
+            <br>
+
+            <input type="radio" name="preference" value="Online">
+            Online Payment
+
+            <input type="radio" name="preference" value="Offline">
+            Offline Payment
+
+            <br><br>
+
+            <!-- Buttons -->
+            <button type="submit">Submit Booking</button>
+
+            <button type="reset">Reset</button>
+
+        </form>
+
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <p>© 2026 IPL Ticket Booking Website</p>
+    </footer>
+
+</body>
+
+</html>
