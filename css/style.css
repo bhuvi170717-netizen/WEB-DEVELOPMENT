@@ -1,7 +1,7 @@
 
 /* CSS Variables */
 :root {
-    --primary: #142b60;
+    --primary: #5d6bc3;
     --accent: #f5a623;
     --background: #f2f2f2;
     --text: #222222;
@@ -37,11 +37,16 @@ nav a:hover {
 
 /* Hero Section */
 header {
-    background: linear-gradient(to right, #142b60, #4169a8);
+    background: #4169a8;
     color: white;
     text-align: center;
     padding: 80px 20px;
     margin-top: 45px;
+}
+
+header a{
+    color: black;
+    background-color: rgb(0, 204, 255);
 }
 
 header h2 {
