@@ -104,12 +104,30 @@ input, select {
     border-radius: 5px;
 }
 
+
 /* Booking Summary */
+
 .summary {
     background-color: #fff3d6;
-    padding: 15px;
+    padding: 20px;
+    margin: 20px;
     border-radius: 10px;
+    box-shadow: 0 2px 5px gray;
 }
+
+.summary h2 {
+    color: var(--primary);
+}
+
+.summary p {
+    font-size: 16px;
+}
+
+.summary h3 {
+    color: green;
+    font-size: 22px;
+}
+
 
 /* Guidelines Cards */
 .card {
