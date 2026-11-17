@@ -20,59 +20,58 @@
 
         <h2>IPL Ticket Booking Form</h2>
 
-        <form>
+        <form id="bookingForm">
 
             <!-- Name -->
-            <label>Name:</label>
-            <input type="text" name="name"
+            <label for="name">Name:</label>
+            <input type="text" id="name" name="name"
                 placeholder="Enter your name"
                 minlength="3" maxlength="30"
                 required>
             <br><br>
 
             <!-- Email -->
-            <label>Email:</label>
-            <input type="email" name="email"
+            <label for="email">Email:</label>
+            <input type="email" id="email" name="email"
                 placeholder="Enter your email"
                 required>
             <br><br>
 
             <!-- Phone -->
-            <label>Phone Number:</label>
-            <input type="tel" name="phone"
+            <label for="phone">Phone Number:</label>
+            <input type="tel" id="phone" name="phone"
                 placeholder="Enter 10 digit number"
                 pattern="[0-9]{10}"
                 required>
             <br><br>
 
             <!-- Match Selection -->
-            <label>Select Match:</label>
-            <select name="match" required>
+            <label for="match">Select Match:</label>
+            <select id="match" name="match" required>
                 <option value="">Choose Match</option>
-                <option>RCB vs CSK</option>
-                <option>MI vs KKR</option>
-                <option>CSK vs MI</option>
-                <option>RCB vs KKR</option>
+                <option value="RCB vs CSK">RCB vs CSK</option>
+                <option value="MI vs KKR">MI vs KKR</option>
+                <option value="CSK vs MI">CSK vs MI</option>
             </select>
             <br><br>
 
             <!-- Stand Category -->
-            <label>Stand Category:</label>
-            <select name="stand" required>
+            <label for="stand">Stand Category:</label>
+            <select id="stand" name="stand" required>
                 <option value="">Choose Stand</option>
-                <option>General</option>
-                <option>Premium</option>
-                <option>VIP</option>
+                <option value="General">General</option>
+                <option value="Premium">Premium</option>
+                <option value="VIP">VIP</option>
             </select>
             <br><br>
 
             <!-- Number of Tickets -->
-            <label>Number of Tickets:</label>
-            <input type="number" name="tickets"
-                min="1" max="10" required>
+            <label for="tickets">Number of Tickets:</label>
+            <input type="number" id="tickets" name="tickets"
+                min="1" max="10" value="1" required>
             <br><br>
 
-            <!-- Additional Preference -->
+            <!-- Booking Preference -->
             <label>Booking Preference:</label>
             <br>
 
@@ -86,10 +85,26 @@
 
             <!-- Buttons -->
             <button type="submit">Submit Booking</button>
-
             <button type="reset">Reset</button>
 
         </form>
+
+    </section>
+
+    <!-- Booking Summary -->
+    <section class="summary">
+
+        <h2>Booking Summary</h2>
+
+        <p>Match: <span id="summaryMatch">Not selected</span></p>
+
+        <p>Stand: <span id="summaryStand">Not selected</span></p>
+
+        <p>Ticket Quantity: <span id="summaryQuantity">1</span></p>
+
+        <p>Price per Ticket: ₹<span id="summaryPrice">0</span></p>
+
+        <h3>Total Amount: ₹<span id="summaryTotal">0</span></h3>
 
     </section>
 
@@ -99,6 +114,6 @@
     </footer>
 
     <script src="js/app.js"></script>
-</body>
 
+</body>
 </html>
