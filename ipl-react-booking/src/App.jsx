@@ -1,123 +1,340 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import Navbar from "./components/Navbar";
 import Hero from "./components/heroo";
 import MatchCard from "./components/MatchCard";
 
+import { supabase } from "./supabase";
 import "./App.css";
 
 function App() {
-  // Match data
-  const matches = [
-    {
-      matchNo: 1,
-      teams: "RCB vs CSK",
-      date: "15 April 2026",
-      time: "7:30 PM",
-      venue: "Bengaluru",
-      general: 800,
-      premium: 2000,
-      vip: 5000,
-    },
-    {
-      matchNo: 2,
-      teams: "MI vs KKR",
-      date: "18 April 2026",
-      time: "7:30 PM",
-      venue: "Mumbai",
-      general: 900,
-      premium: 2200,
-      vip: 5500,
-    },
-    {
-      matchNo: 3,
-      teams: "CSK vs MI",
-      date: "21 April 2026",
-      time: "3:30 PM",
-      venue: "Chennai",
-      general: 700,
-      premium: 1800,
-      vip: 4500,
-    },
-  ];
+    const [matches, setMatches] = useState([]);
+    const [selectedTeam, setSelectedTeam] = useState("All");
+    const [selectedMatch, setSelectedMatch] = useState(null);
 
-  // React State
-  const [selectedTeam, setSelectedTeam] = useState("All");
-  const [selectedMatch, setSelectedMatch] = useState(null);
+    const [customerName, setCustomerName] = useState("");
+    const [quantity, setQuantity] = useState(1);
 
-  // Handle booking
-  
-  function handleBooking(match) {
-  console.log("Button clicked!", match);
-  setSelectedMatch(match);
-}
+    const [loading, setLoading] = useState(true);
+    const [bookingLoading, setBookingLoading] = useState(false);
 
-  // Filter matches
-  const filteredMatches = matches.filter((match) => {
-    if (selectedTeam === "All") {
-      return true;
+    // Fetch matches from Supabase
+    async function fetchMatches() {
+        const { data, error } = await supabase
+            .from("matches")
+            .select("*")
+            .order("id");
+
+        if (error) {
+            console.error("Error fetching matches:", error.message);
+            setLoading(false);
+            return;
+        }
+
+        setMatches(data || []);
+        setLoading(false);
     }
 
-    return match.teams.includes(selectedTeam);
-  });
+    // Fetch matches and listen for database changes
+    useEffect(() => {
+        fetchMatches();
 
-  return (
-    <div>
-      <Navbar />
+        const channel = supabase
+            .channel("matches-changes")
+            .on(
+                "postgres_changes",
+                {
+                    event: "*",
+                    schema: "public",
+                    table: "matches"
+                },
+                () => {
+                    fetchMatches();
+                }
+            )
+            .subscribe();
 
-      <Hero />
+        return () => {
+            supabase.removeChannel(channel);
+        };
+    }, []);
 
-      <section className="matches-section" id="matches">
-        <h2>Match Schedule</h2>
+    // Filter matches by team
+    const filteredMatches = matches.filter((match) => {
+        return (
+            selectedTeam === "All" ||
+            match.teams.includes(selectedTeam)
+        );
+    });
 
-        <label>Filter by Team: </label>
+    // Select match for booking
+    function handleBooking(match) {
+        setSelectedMatch(match);
+        setCustomerName("");
+        setQuantity(1);
+    }
 
-        <select
-          value={selectedTeam}
-          onChange={(event) => setSelectedTeam(event.target.value)}
-        >
-          <option value="All">All Teams</option>
-          <option value="RCB">RCB</option>
-          <option value="CSK">CSK</option>
-          <option value="MI">MI</option>
-          <option value="KKR">KKR</option>
-        </select>
+    // Book tickets
+    async function bookTicket(event) {
+        event.preventDefault();
 
-        <div className="match-container">
-          {filteredMatches.map((match) => (
-            <MatchCard
-              key={match.matchNo}
-              matchNo={match.matchNo}
-              teams={match.teams}
-              date={match.date}
-              time={match.time}
-              venue={match.venue}
-              general={match.general}
-              premium={match.premium}
-              vip={match.vip}
-              onBook={handleBooking}
-            />
-          ))}
+        if (!selectedMatch || bookingLoading) {
+            return;
+        }
+
+        const ticketCount = Number(quantity);
+
+        // Validate customer name
+        if (!customerName.trim()) {
+            alert("Please enter your name.");
+            return;
+        }
+
+        // Validate ticket quantity
+        if (
+            !Number.isInteger(ticketCount) ||
+            ticketCount < 1 ||
+            ticketCount > 10
+        ) {
+            alert("Please select between 1 and 10 tickets.");
+            return;
+        }
+
+        const totalAmount =
+            Number(selectedMatch.ticket_price) * ticketCount;
+
+        setBookingLoading(true);
+
+        try {
+            // Step 1: Update available seats
+            const { data: updatedMatch, error: updateError } =
+                await supabase
+                    .from("matches")
+                    .update({
+                        available_seats:
+                            selectedMatch.available_seats - ticketCount
+                    })
+                    .eq("id", selectedMatch.id)
+                    .gte("available_seats", ticketCount)
+                    .select();
+
+            if (
+                updateError ||
+                !updatedMatch ||
+                updatedMatch.length === 0
+            ) {
+                console.error("Seat update error:", updateError);
+
+                alert(
+                    "Booking failed. Not enough seats available or database permission denied."
+                );
+
+                await fetchMatches();
+                return;
+            }
+
+            // Step 2: Insert booking into bookings table
+            const { error: bookingError } = await supabase
+                .from("bookings")
+                .insert([
+                    {
+                        customer_name: customerName.trim(),
+                        match_id: selectedMatch.id,
+                        tickets: ticketCount,
+                        total_amount: totalAmount
+                    }
+                ]);
+
+            // Step 3: Restore seats if booking insertion fails
+            if (bookingError) {
+                console.error(
+                    "Booking insertion error:",
+                    bookingError.message
+                );
+
+                const { error: restoreError } = await supabase
+                    .from("matches")
+                    .update({
+                        available_seats:
+                            updatedMatch[0].available_seats + ticketCount
+                    })
+                    .eq("id", selectedMatch.id);
+
+                if (restoreError) {
+                    console.error(
+                        "Seat restoration error:",
+                        restoreError.message
+                    );
+                }
+
+                alert("Booking could not be saved. Please try again.");
+
+                await fetchMatches();
+                return;
+            }
+
+            // Step 4: Booking successful
+            alert(
+                `Booking successful!\n\nMatch: ${selectedMatch.teams}\nTickets: ${ticketCount}\nTotal Amount: ₹${totalAmount}`
+            );
+
+            setSelectedMatch(null);
+            setCustomerName("");
+            setQuantity(1);
+
+            await fetchMatches();
+
+        } catch (error) {
+            console.error("Unexpected booking error:", error);
+            alert("Something went wrong. Please try again.");
+
+        } finally {
+            setBookingLoading(false);
+        }
+    }
+
+    return (
+        <div>
+            <Navbar />
+
+            <Hero />
+
+            <section className="matches-section" id="matches">
+
+                <h2>Match Schedule</h2>
+
+                {/* Team Filter */}
+                <label>Filter by Team: </label>
+
+                <select
+                    value={selectedTeam}
+                    onChange={(event) =>
+                        setSelectedTeam(event.target.value)
+                    }
+                >
+                    <option value="All">All Teams</option>
+                    <option value="RCB">RCB</option>
+                    <option value="CSK">CSK</option>
+                    <option value="MI">MI</option>
+                    <option value="KKR">KKR</option>
+                </select>
+
+                {/* Match Cards */}
+                <div className="match-container">
+
+                    {loading ? (
+                        <p>Loading matches...</p>
+
+                    ) : filteredMatches.length === 0 ? (
+                        <p>No matches found.</p>
+
+                    ) : (
+                        filteredMatches.map((match) => (
+                            <MatchCard
+                                key={match.id}
+                                matchNo={match.id}
+                                teams={match.teams}
+                                date={match.match_date}
+                                time="7:30 PM"
+                                venue={match.venue}
+                                general={match.ticket_price}
+                                premium={match.ticket_price}
+                                vip={match.ticket_price}
+                                onBook={() => handleBooking(match)}
+                            />
+                        ))
+                    )}
+
+                </div>
+
+                {/* Booking Form */}
+                {selectedMatch && (
+                    <div className="booking-confirmation">
+
+                        <h2>Book Tickets</h2>
+
+                        <p>
+                            Match: {selectedMatch.teams}
+                        </p>
+
+                        <p>
+                            Date: {selectedMatch.match_date}
+                        </p>
+
+                        <p>
+                            Venue: {selectedMatch.venue}
+                        </p>
+
+                        <p>
+                            Price per ticket: ₹{selectedMatch.ticket_price}
+                        </p>
+
+                        <p>
+                            Available Seats: {selectedMatch.available_seats}
+                        </p>
+
+                        <form onSubmit={bookTicket}>
+
+                            <label>Your Name:</label>
+
+                            <input
+                                type="text"
+                                value={customerName}
+                                onChange={(event) =>
+                                    setCustomerName(event.target.value)
+                                }
+                                placeholder="Enter your name"
+                                required
+                            />
+
+                            <br /><br />
+
+                            <label>Number of Tickets:</label>
+
+                            <input
+                                type="number"
+                                min="1"
+                                max="10"
+                                step="1"
+                                value={quantity}
+                                onChange={(event) =>
+                                    setQuantity(event.target.value)
+                                }
+                                required
+                            />
+
+                            <h3>
+                                Total Amount: ₹
+                                {Number(selectedMatch.ticket_price) *
+                                    Number(quantity)}
+                            </h3>
+
+                            <button
+                                type="submit"
+                                disabled={bookingLoading}
+                            >
+                                {bookingLoading
+                                    ? "Processing..."
+                                    : "Confirm Booking"}
+                            </button>
+
+                            <button
+                                type="button"
+                                disabled={bookingLoading}
+                                onClick={() => setSelectedMatch(null)}
+                            >
+                                Cancel
+                            </button>
+
+                        </form>
+
+                    </div>
+                )}
+
+            </section>
         </div>
-
-        {selectedMatch && (
-          <div className="booking-confirmation">
-            <h2>Booking Selected!</h2>
-            <p>Match: {selectedMatch.teams}</p>
-            <p>Date: {selectedMatch.date}</p>
-            <p>Venue: {selectedMatch.venue}</p>
-
-            <button onClick={() => setSelectedMatch(null)}>
-              Close
-            </button>
-          </div>
-        )}
-
-        {filteredMatches.length === 0 && <p>No matches found.</p>}
-      </section>
-    </div>
-  );
+    );
 }
 
 export default App;
